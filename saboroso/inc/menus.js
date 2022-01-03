@@ -27,17 +27,53 @@ module.exports = {
 
             //fields.photo = `images/${path.parse(files.photo.path).base}`;
 
-            conn.query(`
+            console.log('QUE PORRA É ESSA: ',fields.photo);
 
-                INSERT INTO tb_menus (title, description, price, photo)
-                VALUES (?, ?, ?, ?)
-            
-            `, [
+            console.log('FILES.PHOTO', files.photo.newFilename);
+
+            let query, queryPhoto = '', params = [
                 fields.title,
                 fields.description,
-                fields.price,
-                `images/${files.photo.name}`
-            ], (err, results) => {
+                fields.price
+            ];
+
+            if (files.photo.newFilename) {
+
+                 queryPhoto = ',photo = ?';
+                 params.push(`images/${files.photo.newFilename}`);
+            }
+
+            if (parseInt(fields.id) > 0) {
+
+                params.push(fields.id);
+
+                query = `
+                
+                    UPDATE tb_menus 
+                    SET title = ?,
+                        description = ?,
+                        price = ?
+                        ${queryPhoto}
+                    WHERE id = ?
+                `;
+
+            } else {
+
+                if (!files.photo.newFilename) {
+
+                    reject('Envie a foto do prato.');
+                }
+
+                query = `
+
+                    INSERT INTO tb_menus (title, description, price, photo)
+                    VALUES (?, ?, ?, ?)
+                
+                `;
+                
+            }
+
+            conn.query(query, params, (err, results) => {
 
                 if (err) {
                     reject(err);

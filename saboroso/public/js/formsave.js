@@ -25,17 +25,9 @@ HTMLFormElement.prototype.save = function() { // adicionando um metodo ao protot
                  .then(json => {
 
                         console.log('JSON', json);
+                        resolve(json);
 
-                 })
-                     
-                //      .then(json => {
-                         
-                //         console.log(json);
-                //         resolve(json);
-                    
-                //     })
-
-                //  ).catch(err => reject(err))
+                 }).catch(err => reject(err))
                 
        
          });
