@@ -14,7 +14,7 @@ var app = express();
 
 app.use(function(req, res, next) {
 
-  if (req.method === 'post') {
+  if (req.method === 'POST') {
 
         var form = new formidable.IncomingForm({
 

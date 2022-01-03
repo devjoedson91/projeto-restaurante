@@ -21,7 +21,7 @@ module.exports = {
         });
     },
 
-    save(body) {
+    save(fields, files) {
 
         return new Promise((resolve, reject) => {
 
@@ -33,10 +33,10 @@ module.exports = {
                 VALUES (?, ?, ?, ?)
             
             `, [
-                body.title,
-                body.description,
-                body.price,
-                `images/${body.photo.name}`
+                fields.title,
+                fields.description,
+                fields.price,
+                `images/${files.photo.name}`
             ], (err, results) => {
 
                 if (err) {
