@@ -111,6 +111,18 @@ router.post('/menus', function(req, res, next) {
 
 });
 
+// delete do menus 
+
+router.delete('/menus/:id', function(req, res, next) {
+
+    menus.delete(req.params.id).then(results => {
+
+        res.send(results);
+
+    }).catch(err => res.send(err))
+
+});
+
 router.get('/reservations', function(req, res, next){
 
     res.render('admin/reservations', admin.getParams(req, {

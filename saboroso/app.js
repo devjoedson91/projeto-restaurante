@@ -19,13 +19,11 @@ app.use(function(req, res, next) {
         var form = new formidable.IncomingForm({
 
             uploadDir: path.join(__dirname, '/public/images'), 
-            keepExtensions: true,
-            multiples: true,
-            encoding: 'utf-8'
+            keepExtensions: true
 
         });
 
-        console.log('aqui', form.uploadDir);
+        console.log('AQUI', form.uploadDir);
 
         form.parse(req, function(err, fields, files){
 
@@ -33,9 +31,13 @@ app.use(function(req, res, next) {
             req.fields = fields;
             req.files = files;
 
+            console.log('REQ.FIELDS', files);
+
             next();
 
         });
+
+        
 
   } else {
 

@@ -25,23 +25,23 @@ module.exports = {
 
         return new Promise((resolve, reject) => {
 
-            //fields.photo = `images/${path.parse(files.photo.path).base}`;
+            fields.photo = `images/${path.parse(files.photo.filepath).base}`;
 
-            console.log('QUE PORRA É ESSA: ',fields.photo);
+            console.log('QUE PORRA É ESSA: ',`images/${path.parse(files.photo.filepath).base}`);
 
             console.log('FILES.PHOTO', files.photo.newFilename);
 
-            let query, queryPhoto = '', params = [
+            let query, params = [
                 fields.title,
                 fields.description,
                 fields.price
             ];
 
-            if (files.photo.newFilename) {
-
-                 queryPhoto = ',photo = ?';
-                 params.push(`images/${files.photo.newFilename}`);
-            }
+            // if (files.photo.newFilename) {
+                
+            //      queryPhoto = ',photo = ?';
+            //      params.push(fields.photo);
+            // }
 
             if (parseInt(fields.id) > 0) {
 
@@ -53,7 +53,6 @@ module.exports = {
                     SET title = ?,
                         description = ?,
                         price = ?
-                        ${queryPhoto}
                     WHERE id = ?
                 `;
 
@@ -63,6 +62,8 @@ module.exports = {
 
                     reject('Envie a foto do prato.');
                 }
+
+                params.push(fields.photo);
 
                 query = `
 
@@ -85,6 +86,29 @@ module.exports = {
 
         })
 
+    },
+
+    delete(id) {
+
+        return new Promise((resolve, reject) => {
+
+            conn.query(`
+            
+                DELETE FROM tb_menus WHERE id = ?
+            
+            `, [
+                id
+            ], (err, results) => {
+
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+
+            });
+        });
+
     }
 
-}
+};
