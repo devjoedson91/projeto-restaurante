@@ -3,6 +3,10 @@ var router = express.Router();
 var users = require('./../inc/users');
 var admin = require('./../inc/admin');
 var menus = require('./../inc/menus');
+var reservations = require('./../inc/reservations');
+var moment = require('moment');
+
+moment.locale('pt-br');
 
 router.use(function(req, res, next) {
 
@@ -125,9 +129,39 @@ router.delete('/menus/:id', function(req, res, next) {
 
 router.get('/reservations', function(req, res, next){
 
-    res.render('admin/reservations', admin.getParams(req, {
-        date: {}
-    }));
+    reservations.getReservations().then(data => {
+
+        res.render('admin/reservations', admin.getParams(req, {
+            date: {},
+            data,
+            moment
+        }));
+
+    });
+
+});
+
+// post do reservations
+
+router.post('/reservations', function(req, res, next) {
+
+    reservations.save(req.fields).then(results => {
+
+        res.send(results);
+
+    }).catch(err => res.send(err));
+
+});
+
+// delete do reservations 
+
+router.delete('/reservations/:id', function(req, res, next) {
+
+    reservations.delete(req.params.id).then(results => {
+
+        res.send(results);
+
+    }).catch(err => res.send(err))
 
 });
 
