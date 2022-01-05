@@ -224,12 +224,21 @@
 
           let data = JSON.parse(tr.dataset.row);
 
-          fetch(`/admin/menus/${data.id}`, {
+          if (confirm(`Voce deseja realmente excluir o registro ${data.title}?`)) {
 
-              method: 'DELETE',
+              fetch(`/admin/menus/${data.id}`, {
 
-          })
-            .then(response => response.json())
+                  method: 'DELETE',
+
+                  })
+                  .then(response => response.json())
+                  .then(json => {
+
+                    console.log(json);
+                    window.location.reload();
+
+              })
+          }
 
       });
 
