@@ -2,13 +2,24 @@ class Grid {
 
     constructor(configs) {
 
+        configs.listeners = Object.assign({
+
+            afterUpdateClick: (e) => { // o assign nao junta esse objeto com os de mais.
+                $('#modal-update').modal('show');
+            },
+            afterDeleteClick: (e) => { // o assign nao junta esse objeto com os de mais.
+                window.location.reload();
+            }
+
+        }, configs.listeners);
+
         this.options = Object.assign({}, { // junta os outros objetos no {}
             
             formCreate: '#modal-create form',
             formUpdate: '#modal-update form',
             btnUpdate: '.btn-update',
-            btnDelete: '.btn-delete'
-            
+            btnDelete: '.btn-delete',
+                        
         }, configs);
 
         this.initForms();
@@ -40,19 +51,33 @@ class Grid {
 
     }
 
+    fireEvent(name, args) { // nome do evento e os argumentos
+
+        if (typeof this.options.listeners[name] === 'function') this.options.listeners[name].apply(this, args);
+
+    }
+
+    getTRData(e) {
+
+        let tr = e.path.find(el => { // path é o caminho onde o botao esta dentro da arvore dom
+
+            return (el.tagName.toUpperCase() === 'TR');
+
+        });
+
+        return JSON.parse(tr.dataset.row);
+
+    }
+
     initButtons() {
 
         [...document.querySelectorAll(this.options.btnUpdate)].forEach(btn => {
 
             btn.addEventListener('click', e => {
 
-                let tr = e.path.find(el => { // path é o caminho onde o botao esta dentro da arvore dom
+                this.fireEvent('beforeUpdateClick', [e]);
 
-                    return (el.tagName.toUpperCase() === 'TR');
-
-                });
-
-                let data = JSON.parse(tr.dataset.row);
+                let data = this.getTRData(e);
 
                 for (let name in data) {
 
@@ -70,7 +95,7 @@ class Grid {
 
                 }
 
-                $('#modal-update').modal('show');
+                this.fireEvent('afterUpdateClick', [e]);
 
             });
 
@@ -78,15 +103,11 @@ class Grid {
 
         [...document.querySelectorAll(this.options.btnDelete)].forEach(btn => {
 
+            this.fireEvent('beforeDeleteClick', [e]);
+
             btn.addEventListener('click', e => {
 
-                let tr = e.path.find(el => {
-
-                    return (el.tagName.toUpperCase() === 'TR');
-
-                });
-
-                let data = JSON.parse(tr.dataset.row);
+                let data = this.getTRData(e);
 
                 if (confirm(eval('`'+this.options.deleteMsg+'`'))) {
 
@@ -97,8 +118,7 @@ class Grid {
                         })
                         .then(response => response.json())
                         .then(json => {
-
-                            window.location.reload();
+                            this.fireEvent('afterDeleteClick');
 
                     })
                 }
