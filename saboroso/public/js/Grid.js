@@ -2,7 +2,7 @@ class Grid {
 
     constructor(configs) {
 
-        this.options = Object.assign({}, { // cria um objeto com base em outro objeto
+        this.options = Object.assign({}, { // junta os outros objetos no {}
             
             formCreate: '#modal-create form',
             formUpdate: '#modal-update form',
@@ -11,24 +11,27 @@ class Grid {
             
         }, configs);
 
+        this.initForms();
+        this.initButtons();
+
     }
 
     initForms() {
 
-        let formCreate = document.querySelector(this.options.formCreate);
+        this.formCreate = document.querySelector(this.options.formCreate);
 
         // para entender esse codigo, ver o arquivo formsave
 
-        formCreate.save().then(json => {
+        this.formCreate.save().then(json => {
 
             window.location.reload();
 
         }).catch(err => console.log('eRRO: '+err));
 
 
-        let formUpdate = document.querySelector(this.options.formUpdate);
+        this.formUpdate = document.querySelector(this.options.formUpdate);
 
-        formUpdate.save().then(json => {
+        this.formUpdate.save().then(json => {
 
             window.location.reload();
 
@@ -53,7 +56,7 @@ class Grid {
 
                 for (let name in data) {
 
-                    let input = formUpdate.querySelector(`[name=${name}]`);
+                    let input = this.formUpdate.querySelector(`[name=${name}]`);
 
                     switch(name) {
                     case 'date':
