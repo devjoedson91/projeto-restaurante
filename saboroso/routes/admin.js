@@ -5,6 +5,7 @@ var admin = require('./../inc/admin');
 var menus = require('./../inc/menus');
 var reservations = require('./../inc/reservations');
 var moment = require('moment');
+const { use } = require('express/lib/application');
 
 moment.locale('pt-br');
 
@@ -165,9 +166,41 @@ router.delete('/reservations/:id', function(req, res, next) {
 
 });
 
-router.get('/users', function(req, res, next){
+// Usuarios
 
-    res.render('admin/users', admin.getParams(req));
+router.get('/users', function(req, res, next) {
+
+    users.getUsers().then(data => {
+
+        res.render('admin/users', admin.getParams(req, {
+
+            data
+        }));
+
+    });
+
+});
+
+router.post('/users', function(req, res, next){
+
+    users.save(req.fields).then(results => {
+
+        res.send(results);
+
+        console.log('RESULTS ', results);
+
+    }).catch(err => res.send(err))  
+
+});
+
+router.delete('/users/:id', function(req, res, next){ // :id deve ser igual no req.params.id
+
+    users.delete(req.params.id).then(results => {
+
+        res.send(results);
+
+    }).catch(err => res.send(err));
+
 
 });
 

@@ -147,100 +147,32 @@
 
 <script src="/js/filereader.js"> // plugin para exibir a imagem antes de salvar ou editar </script>
 <script src="/js/formsave.js"> // plugin para armazenar salvamento de dados via ajax </script>
+<script src="/js/Grid.js"></script>
 
 <script>
 
   new HcodeFileReader('#modal-create [type=file]', '#modal-create img');
   new HcodeFileReader('#modal-update [type=file]', '#modal-update img');
 
+  new Grid({
 
-  let formCreate = document.querySelector('#modal-create form');
+      deleteUrl: '/admin/menus/${data.id}',
+      deleteMsg: 'Voce deseja realmente excluir o menu ${data.title}?',
+      onUpdateLoad: (form, name, data) => { // quando o load for carregado
 
-  // para entender esse codigo, ver o arquivo formsave
+          let input = form.querySelector(`[name=${name}]`);
 
-  formCreate.save().then(json => {
-
-      window.location.reload();
-
-  }).catch(err => console.log('eRRO: '+err));
-
-
-  let formUpdate = document.querySelector('#modal-update form');
-
-  formUpdate.save().then(json => {
-
-     window.location.reload();
-
-  }).catch(err => console.log(err));
-
-
-  [...document.querySelectorAll('.btn-update')].forEach(btn => {
-
-      btn.addEventListener('click', e => {
-
-          let tr = e.path.find(el => { // path é o caminho onde o botao esta dentro da arvore dom
-
-              return (el.tagName.toUpperCase() === 'TR');
-
-          });
-
-          console.log(tr);
-
-          console.log(tr.dataset.row);
-
-          let data = JSON.parse(tr.dataset.row);
-
-          for (let name in data) {
-
-              switch(name) {
-
-                  case 'photo':
-                      document.querySelector('#modal-update img').src = '/'+data[name];
-                      break;
-                      default:
-                        let input = formUpdate.querySelector(`[name=${name}]`);
-                        if (input) input.value = data[name];
-
-              }
+          switch(name) {
+          
+            case 'photo':
+                form.querySelector('img').src = '/'+data[name];
+                break;
+            default:
+                if (input) input.value = data[name];
 
           }
 
-          $('#modal-update').modal('show');
-
-      });
-
-  });
-
-
-  [...document.querySelectorAll('.btn-delete')].forEach(btn => {
-
-      btn.addEventListener('click', e => {
-
-          let tr = e.path.find(el => {
-
-              return (el.tagName.toUpperCase() === 'TR');
-
-          });
-
-          let data = JSON.parse(tr.dataset.row);
-
-          if (confirm(`Voce deseja realmente excluir o registro ${data.title}?`)) {
-
-              fetch(`/admin/menus/${data.id}`, {
-
-                  method: 'DELETE',
-
-                  })
-                  .then(response => response.json())
-                  .then(json => {
-
-                    console.log(json);
-                    window.location.reload();
-
-              })
-          }
-
-      });
+      }
 
   });
 

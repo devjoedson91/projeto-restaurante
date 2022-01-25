@@ -9,6 +9,22 @@ class Grid {
             },
             afterDeleteClick: (e) => { // o assign nao junta esse objeto com os de mais.
                 window.location.reload();
+            },
+            afterFormCreate: (e) => {
+
+                window.location.reload();
+            },
+            afterFormUpdate: (e) => {
+
+                window.location.reload();
+            },
+            afterFormCreateError: (e) => {
+
+                alert('Não foi possivel enviar o formulário');
+            },
+            afterFormUpdateError: (e) => {
+
+                alert('Não foi possivel editar o formulário');
             }
 
         }, configs.listeners);
@@ -19,6 +35,11 @@ class Grid {
             formUpdate: '#modal-update form',
             btnUpdate: '.btn-update',
             btnDelete: '.btn-delete',
+            onUpdateLoad: (form, name, data) => {
+
+                let input = form.querySelector('[name='+name+']');
+                if (input) input.value = data[name];
+            }
                         
         }, configs);
 
@@ -35,18 +56,27 @@ class Grid {
 
         this.formCreate.save().then(json => {
 
-            window.location.reload();
+            this.fireEvent('afterFormCreate');
 
-        }).catch(err => console.log('eRRO: '+err));
+        }).catch(err => {
+            
+            this.fireEvent('afterFormCreateError');
+            console.log('eRRO: '+err);
+            
+        })
 
 
         this.formUpdate = document.querySelector(this.options.formUpdate);
 
         this.formUpdate.save().then(json => {
 
-            window.location.reload();
+            this.fireEvent('afterFormUpdate');
 
-        }).catch(err => console.log(err));
+        }).catch(err => {
+
+            this.fireEvent('afterFormUpdateError');
+
+        })
 
 
     }
@@ -54,6 +84,8 @@ class Grid {
     fireEvent(name, args) { // nome do evento e os argumentos
 
         if (typeof this.options.listeners[name] === 'function') this.options.listeners[name].apply(this, args);
+
+        console.log(name, args);
 
     }
 
@@ -75,23 +107,11 @@ class Grid {
 
             btn.addEventListener('click', e => {
 
-                this.fireEvent('beforeUpdateClick', [e]);
-
                 let data = this.getTRData(e);
 
                 for (let name in data) {
 
-                    let input = this.formUpdate.querySelector(`[name=${name}]`);
-
-                    switch(name) {
-                    case 'date':
-                        if (input) input.value = moment(data[name]).format('YYYY-MM-DD');
-                        //console.log(moment(data[name]).format('YYYY-MM-DD'));
-                        break; 
-                    default:
-                        if (input) input.value = data[name];
-
-                    }
+                    this.options.onUpdateLoad(this.formUpdate, name, data);
 
                 }
 
@@ -103,9 +123,9 @@ class Grid {
 
         [...document.querySelectorAll(this.options.btnDelete)].forEach(btn => {
 
-            this.fireEvent('beforeDeleteClick', [e]);
+           btn.addEventListener('click', e => {
 
-            btn.addEventListener('click', e => {
+                this.fireEvent('beforeDeleteClick');
 
                 let data = this.getTRData(e);
 
