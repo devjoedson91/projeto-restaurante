@@ -5,7 +5,7 @@ var admin = require('./../inc/admin');
 var menus = require('./../inc/menus');
 var reservations = require('./../inc/reservations');
 var moment = require('moment');
-const { use } = require('express/lib/application');
+var contacts = require('./../inc/contacts');
 
 moment.locale('pt-br');
 
@@ -78,9 +78,27 @@ router.get('/login', function(req, res, next){
 
 });
 
+// get dos contatos
+
 router.get('/contacts', function(req, res, next){
 
-    res.render('admin/contacts', admin.getParams(req));
+    contacts.getContacts().then(data => {
+
+        res.render('admin/contacts', admin.getParams(req, {data}));
+
+    })
+
+});
+
+// delete contacts
+
+router.delete('/contacts/:id', function(req, res, next) {
+
+    contacts.delete(req.params.id).then(results => {
+
+        res.send(results);
+
+    }).catch(err => res.send(err))
 
 });
 
@@ -190,6 +208,18 @@ router.post('/users', function(req, res, next){
         console.log('RESULTS ', results);
 
     }).catch(err => res.send(err))  
+
+});
+
+router.post('/users/password-change', function(req, res, next) {
+
+    users.changePassword(req).then(results => {
+
+        res.send(results);
+
+        console.log('RESULTS ', results);
+
+    }).catch(err => res.send({error: err}))
 
 });
 

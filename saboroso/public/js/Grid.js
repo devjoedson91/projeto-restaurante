@@ -52,34 +52,50 @@ class Grid {
 
     initForms() {
 
-        this.formCreate = document.querySelector(this.options.formCreate);
+        this.formCreate = document.querySelector(this.options.formCreate);   
 
         // para entender esse codigo, ver o arquivo formsave
 
-        this.formCreate.save().then(json => {
+        // o formulario so poderá criar o save caso ele exista
 
-            this.fireEvent('afterFormCreate');
+        if (this.formCreate) {
 
-        }).catch(err => {
-            
-            this.fireEvent('afterFormCreateError');
-            console.log('eRRO: '+err);
-            
-        })
+            this.formCreate.save({
 
+                success: () => {
+    
+                    this.fireEvent('afterFormCreate');
+                },
+                failure: () => {
+    
+                    this.fireEvent('afterFormCreateError');
+                    console.log('eRRO: '+err);
+    
+                }
+    
+            });
+
+        }
 
         this.formUpdate = document.querySelector(this.options.formUpdate);
 
-        this.formUpdate.save().then(json => {
+        if (this.formUpdate) {
 
-            this.fireEvent('afterFormUpdate');
+            this.formUpdate.save({
 
-        }).catch(err => {
+                success: () => {
+    
+                    this.fireEvent('afterFormUpdate');
+                },
+                failure: () => {
+    
+                    this.fireEvent('afterFormUpdateError');
+                }
+    
+        
+            });
 
-            this.fireEvent('afterFormUpdateError');
-
-        })
-
+        }
 
     }
 
