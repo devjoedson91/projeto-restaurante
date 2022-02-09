@@ -16,30 +16,26 @@
         },
         "options": {
             "responsive": false,
-            "datasets": {
-              "bar": {
-                    "barPercentage": 1,
-                    "categoryPercentage": 1
-                }
-            },
+            "legend": false,
+            "title": false,
             "scales": {
-                "x": {
+                "xAxes": [{
                     "type": "time",
                     "stacked": true,
                     "display": false,
-                    "offset": false,
-                    "time": {
-                        "parser": "YYYY"
-                    },
+                    "barPercentage": 1,
+                    "categoryPercentage": 1,
                     "ticks": {
                         "source": "labels"
                     }
-                },
-                "y": {
+                }],
+                "yAxes": [{
                     "display": false,
                     "stacked": true,
-                    "beginAtZero": true
-                }
+                    "ticks": {
+                        "beginAtZero": true
+                    }
+                }]
             }
         }
     },

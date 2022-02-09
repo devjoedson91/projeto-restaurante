@@ -33,28 +33,26 @@ To update the options, mutating the options property in place or passing in a ne
 
 ```javascript
 function updateConfigByMutating(chart) {
-    chart.options.plugins.title.text = 'new title';
+    chart.options.title.text = 'new title';
     chart.update();
 }
 
 function updateConfigAsNewObject(chart) {
     chart.options = {
         responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: 'Chart.js'
-            }
+        title:{
+            display:true,
+            text: 'Chart.js'
         },
         scales: {
-            x: {
+            xAxes: [{
                 display: true
-            },
-            y: {
+            }],
+            yAxes: [{
                 display: true
-            }
+            }]
         }
-    };
+    }
     chart.update();
 }
 ```
@@ -66,37 +64,38 @@ Variables referencing any one from `chart.scales` would be lost after updating s
 
 ```javascript
 function updateScales(chart) {
-    let xScale = chart.scales.x;
-    let yScale = chart.scales.y;
+    var xScale = chart.scales['x-axis-0'];
+    var yScale = chart.scales['y-axis-0'];
     chart.options.scales = {
-        newId: {
+        xAxes: [{
+            id: 'newId',
             display: true
-        },
-        y: {
+        }],
+        yAxes: [{
             display: true,
             type: 'logarithmic'
-        }
-    };
+        }]
+    }
     chart.update();
     // need to update the reference
-    xScale = chart.scales.newId;
-    yScale = chart.scales.y;
+    xScale = chart.scales['newId'];
+    yScale = chart.scales['y-axis-0'];
 }
 ```
 
-You can also update a specific scale either by its id.
+You can also update a specific scale either by specifying its index or id.
 
 ```javascript
 function updateScale(chart) {
-    chart.options.scales.y = {
+    chart.options.scales.yAxes[0] = {
         type: 'logarithmic'
-    };
+    }
     chart.update();
 }
 ```
 
-Code sample for updating options can be found in [toggle-scale-type.html](https://www.chartjs.org/samples/latest/scales/toggle-scale-type.html).
+Code sample for updating options can be found in [toggle-scale-type.html](../../samples/scales/toggle-scale-type.html).
 
 ## Preventing Animations
 
-Sometimes when a chart updates, you may not want an animation. To achieve this you can call `update` with `'none'` as mode.
+Sometimes when a chart updates, you may not want an animation. To achieve this you can call `update` with a duration of `0`. This will render the chart synchronously and without an animation.

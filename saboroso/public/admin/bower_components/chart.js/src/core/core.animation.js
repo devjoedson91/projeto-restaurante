@@ -1,114 +1,172 @@
-import effects from '../helpers/helpers.easing';
-import {resolve} from '../helpers/helpers.options';
-import {color as helpersColor} from '../helpers/helpers.color';
+/* global window: false */
+'use strict';
 
-const transparent = 'transparent';
-const interpolators = {
-  boolean(from, to, factor) {
-    return factor > 0.5 ? to : from;
-  },
-  color(from, to, factor) {
-    const c0 = helpersColor(from || transparent);
-    const c1 = c0.valid && helpersColor(to || transparent);
-    return c1 && c1.valid
-      ? c1.mix(c0, factor).hexString()
-      : to;
-  },
-  number(from, to, factor) {
-    return from + (to - from) * factor;
-  }
+var defaults = require('./core.defaults');
+var Element = require('./core.element');
+var helpers = require('../helpers/index');
+
+defaults._set('global', {
+	animation: {
+		duration: 1000,
+		easing: 'easeOutQuart',
+		onProgress: helpers.noop,
+		onComplete: helpers.noop
+	}
+});
+
+module.exports = function(Chart) {
+
+	Chart.Animation = Element.extend({
+		chart: null, // the animation associated chart instance
+		currentStep: 0, // the current animation step
+		numSteps: 60, // default number of steps
+		easing: '', // the easing to use for this animation
+		render: null, // render function used by the animation service
+
+		onAnimationProgress: null, // user specified callback to fire on each step of the animation
+		onAnimationComplete: null, // user specified callback to fire when the animation finishes
+	});
+
+	Chart.animationService = {
+		frameDuration: 17,
+		animations: [],
+		dropFrames: 0,
+		request: null,
+
+		/**
+		 * @param {Chart} chart - The chart to animate.
+		 * @param {Chart.Animation} animation - The animation that we will animate.
+		 * @param {Number} duration - The animation duration in ms.
+		 * @param {Boolean} lazy - if true, the chart is not marked as animating to enable more responsive interactions
+		 */
+		addAnimation: function(chart, animation, duration, lazy) {
+			var animations = this.animations;
+			var i, ilen;
+
+			animation.chart = chart;
+
+			if (!lazy) {
+				chart.animating = true;
+			}
+
+			for (i = 0, ilen = animations.length; i < ilen; ++i) {
+				if (animations[i].chart === chart) {
+					animations[i] = animation;
+					return;
+				}
+			}
+
+			animations.push(animation);
+
+			// If there are no animations queued, manually kickstart a digest, for lack of a better word
+			if (animations.length === 1) {
+				this.requestAnimationFrame();
+			}
+		},
+
+		cancelAnimation: function(chart) {
+			var index = helpers.findIndex(this.animations, function(animation) {
+				return animation.chart === chart;
+			});
+
+			if (index !== -1) {
+				this.animations.splice(index, 1);
+				chart.animating = false;
+			}
+		},
+
+		requestAnimationFrame: function() {
+			var me = this;
+			if (me.request === null) {
+				// Skip animation frame requests until the active one is executed.
+				// This can happen when processing mouse events, e.g. 'mousemove'
+				// and 'mouseout' events will trigger multiple renders.
+				me.request = helpers.requestAnimFrame.call(window, function() {
+					me.request = null;
+					me.startDigest();
+				});
+			}
+		},
+
+		/**
+		 * @private
+		 */
+		startDigest: function() {
+			var me = this;
+			var startTime = Date.now();
+			var framesToDrop = 0;
+
+			if (me.dropFrames > 1) {
+				framesToDrop = Math.floor(me.dropFrames);
+				me.dropFrames = me.dropFrames % 1;
+			}
+
+			me.advance(1 + framesToDrop);
+
+			var endTime = Date.now();
+
+			me.dropFrames += (endTime - startTime) / me.frameDuration;
+
+			// Do we have more stuff to animate?
+			if (me.animations.length > 0) {
+				me.requestAnimationFrame();
+			}
+		},
+
+		/**
+		 * @private
+		 */
+		advance: function(count) {
+			var animations = this.animations;
+			var animation, chart;
+			var i = 0;
+
+			while (i < animations.length) {
+				animation = animations[i];
+				chart = animation.chart;
+
+				animation.currentStep = (animation.currentStep || 0) + count;
+				animation.currentStep = Math.min(animation.currentStep, animation.numSteps);
+
+				helpers.callback(animation.render, [chart, animation], chart);
+				helpers.callback(animation.onAnimationProgress, [animation], chart);
+
+				if (animation.currentStep >= animation.numSteps) {
+					helpers.callback(animation.onAnimationComplete, [animation], chart);
+					chart.animating = false;
+					animations.splice(i, 1);
+				} else {
+					++i;
+				}
+			}
+		}
+	};
+
+	/**
+	 * Provided for backward compatibility, use Chart.Animation instead
+	 * @prop Chart.Animation#animationObject
+	 * @deprecated since version 2.6.0
+	 * @todo remove at version 3
+	 */
+	Object.defineProperty(Chart.Animation.prototype, 'animationObject', {
+		get: function() {
+			return this;
+		}
+	});
+
+	/**
+	 * Provided for backward compatibility, use Chart.Animation#chart instead
+	 * @prop Chart.Animation#chartInstance
+	 * @deprecated since version 2.6.0
+	 * @todo remove at version 3
+	 */
+	Object.defineProperty(Chart.Animation.prototype, 'chartInstance', {
+		get: function() {
+			return this.chart;
+		},
+		set: function(value) {
+			this.chart = value;
+		}
+	});
+
 };
-
-export default class Animation {
-  constructor(cfg, target, prop, to) {
-    const currentValue = target[prop];
-
-    to = resolve([cfg.to, to, currentValue, cfg.from]);
-    const from = resolve([cfg.from, currentValue, to]);
-
-    this._active = true;
-    this._fn = cfg.fn || interpolators[cfg.type || typeof from];
-    this._easing = effects[cfg.easing] || effects.linear;
-    this._start = Math.floor(Date.now() + (cfg.delay || 0));
-    this._duration = this._total = Math.floor(cfg.duration);
-    this._loop = !!cfg.loop;
-    this._target = target;
-    this._prop = prop;
-    this._from = from;
-    this._to = to;
-    this._promises = undefined;
-  }
-
-  active() {
-    return this._active;
-  }
-
-  update(cfg, to, date) {
-    if (this._active) {
-      this._notify(false);
-
-      const currentValue = this._target[this._prop];
-      const elapsed = date - this._start;
-      const remain = this._duration - elapsed;
-      this._start = date;
-      this._duration = Math.floor(Math.max(remain, cfg.duration));
-      this._total += elapsed;
-      this._loop = !!cfg.loop;
-      this._to = resolve([cfg.to, to, currentValue, cfg.from]);
-      this._from = resolve([cfg.from, currentValue, to]);
-    }
-  }
-
-  cancel() {
-    if (this._active) {
-      // update current evaluated value, for smoother animations
-      this.tick(Date.now());
-      this._active = false;
-      this._notify(false);
-    }
-  }
-
-  tick(date) {
-    const elapsed = date - this._start;
-    const duration = this._duration;
-    const prop = this._prop;
-    const from = this._from;
-    const loop = this._loop;
-    const to = this._to;
-    let factor;
-
-    this._active = from !== to && (loop || (elapsed < duration));
-
-    if (!this._active) {
-      this._target[prop] = to;
-      this._notify(true);
-      return;
-    }
-
-    if (elapsed < 0) {
-      this._target[prop] = from;
-      return;
-    }
-
-    factor = (elapsed / duration) % 2;
-    factor = loop && factor > 1 ? 2 - factor : factor;
-    factor = this._easing(Math.min(1, Math.max(0, factor)));
-
-    this._target[prop] = this._fn(from, to, factor);
-  }
-
-  wait() {
-    const promises = this._promises || (this._promises = []);
-    return new Promise((res, rej) => {
-      promises.push({res, rej});
-    });
-  }
-
-  _notify(resolved) {
-    const method = resolved ? 'res' : 'rej';
-    const promises = this._promises || [];
-    for (let i = 0; i < promises.length; i++) {
-      promises[i][method]();
-    }
-  }
-}

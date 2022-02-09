@@ -1,6 +1,5 @@
 # Usage
-
-Chart.js can be used with ES6 modules, plain JavaScript, and module loaders.
+Chart.js can be used with ES6 modules, plain JavaScript and module loaders.
 
 ## Creating a Chart
 
@@ -12,10 +11,10 @@ To create a chart, we need to instantiate the `Chart` class. To do this, we need
 
 ```javascript
 // Any of the following formats may be used
-const ctx = document.getElementById('myChart');
-const ctx = document.getElementById('myChart').getContext('2d');
-const ctx = $('#myChart');
-const ctx = 'myChart';
+var ctx = document.getElementById("myChart");
+var ctx = document.getElementById("myChart").getContext("2d");
+var ctx = $("#myChart");
+var ctx = "myChart";
 ```
 
 Once you have the element or context, you're ready to instantiate a pre-defined chart-type or create your own!
@@ -25,11 +24,11 @@ The following example instantiates a bar chart showing the number of votes for d
 ```html
 <canvas id="myChart" width="400" height="400"></canvas>
 <script>
-const ctx = document.getElementById('myChart');
-const myChart = new Chart(ctx, {
+var ctx = document.getElementById("myChart");
+var myChart = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
         datasets: [{
             label: '# of Votes',
             data: [12, 19, 3, 5, 2, 3],
@@ -42,7 +41,7 @@ const myChart = new Chart(ctx, {
                 'rgba(255, 159, 64, 0.2)'
             ],
             borderColor: [
-                'rgba(255, 99, 132, 1)',
+                'rgba(255,99,132,1)',
                 'rgba(54, 162, 235, 1)',
                 'rgba(255, 206, 86, 1)',
                 'rgba(75, 192, 192, 1)',
@@ -54,9 +53,11 @@ const myChart = new Chart(ctx, {
     },
     options: {
         scales: {
-            y: {
-                beginAtZero: true
-            }
+            yAxes: [{
+                ticks: {
+                    beginAtZero:true
+                }
+            }]
         }
     }
 });

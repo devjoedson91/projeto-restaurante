@@ -1,42 +1,35 @@
 # New Axes
 
-Axes in Chart.js can be individually extended. Axes should always derive from `Chart.Scale` but this is not a mandatory requirement.
+Axes in Chart.js can be individually extended. Axes should always derive from Chart.Scale but this is not a mandatory requirement.
 
 ```javascript
-class MyScale extends Chart.Scale {
+let MyScale = Chart.Scale.extend({
     /* extensions ... */
-}
-MyScale.id = 'myScale';
-MyScale.defaults = defaultConfigObject;
+});
 
 // MyScale is now derived from Chart.Scale
 ```
 
-Once you have created your scale class, you need to register it with the global chart object so that it can be used.
+Once you have created your scale class, you need to register it with the global chart object so that it can be used. A default config for the scale may be provided when registering the constructor. The first parameter to the register function is a string key that is used later to identify which scale type to use for a chart.
 
 ```javascript
-Chart.register(MyScale);
-
-// If the new scale is not extending Chart.Scale, the prototype can not be used to detect what
-// you are trying to register - so you need to be explicit:
-
-// Chart.registry.addScales(MyScale);
+Chart.scaleService.registerScaleType('myScale', MyScale, defaultConfigObject);
 ```
 
 To use the new scale, simply pass in the string key to the config when creating a chart.
 
 ```javascript
-const lineChart = new Chart(ctx, {
+var lineChart = new Chart(ctx, {
     data: data,
     type: 'line',
     options: {
         scales: {
-            y: {
-                type: 'myScale' // this is the same id that was set on the scale
-            }
+            yAxes: [{
+                type: 'myScale' // this is the same key that was passed to the registerScaleType function
+            }]
         }
     }
-});
+})
 ```
 
 ## Scale Properties
@@ -45,31 +38,30 @@ Scale instances are given the following properties during the fitting process.
 
 ```javascript
 {
-    left: number, // left edge of the scale bounding box
-    right: number, // right edge of the bounding box
-    top: number,
-    bottom: number,
-    width: number, // the same as right - left
-    height: number, // the same as bottom - top
+    left: Number, // left edge of the scale bounding box
+    right: Number, // right edge of the bounding box'
+    top: Number,
+    bottom: Number,
+    width: Number, // the same as right - left
+    height: Number, // the same as bottom - top
 
     // Margin on each side. Like css, this is outside the bounding box.
     margins: {
-        left: number,
-        right: number,
-        top: number,
-        bottom: number
+        left: Number,
+        right: Number,
+        top: Number,
+        bottom: Number,
     },
 
     // Amount of padding on the inside of the bounding box (like CSS)
-    paddingLeft: number,
-    paddingRight: number,
-    paddingTop: number,
-    paddingBottom: number
+    paddingLeft: Number,
+    paddingRight: Number,
+    paddingTop: Number,
+    paddingBottom: Number,
 }
 ```
 
 ## Scale Interface
-
 To work with Chart.js, custom scale types must implement the following interface.
 
 ```javascript
@@ -81,17 +73,20 @@ To work with Chart.js, custom scale types must implement the following interface
     // buildTicks() should create a ticks array on the axis instance, if you intend to use any of the implementations from the base class
     buildTicks: function() {},
 
-    // Get the label to show for the given value
-    getLabelForValue: function(value) {},
+    // Get the value to show for the data at the given index of the the given dataset, ie this.chart.data.datasets[datasetIndex].data[index]
+    getLabelForIndex: function(index, datasetIndex) {},
 
     // Get the pixel (x coordinate for horizontal axis, y coordinate for vertical axis) for a given value
     // @param index: index into the ticks array
-    getPixelForTick: function(index) {},
+    // @param includeOffset: if true, get the pixel halfway between the given tick and the next
+    getPixelForTick: function(index, includeOffset) {},
 
     // Get the pixel (x coordinate for horizontal axis, y coordinate for vertical axis) for a given value
     // @param value : the value to get the pixel for
-    // @param [index] : index into the data array of the value
-    getPixelForValue: function(value, index) {},
+    // @param index : index into the data array of the value
+    // @param datasetIndex : index of the dataset the value comes from
+    // @param includeOffset : if true, get the pixel halfway between the given tick and the next
+    getPixelForValue: function(value, index, datasetIndex, includeOffset) {}
 
     // Get the value for a given pixel (x coordinate for horizontal axis, y coordinate for vertical axis)
     // @param pixel : pixel value
@@ -102,12 +97,11 @@ To work with Chart.js, custom scale types must implement the following interface
 Optionally, the following methods may also be overwritten, but an implementation is already provided by the `Chart.Scale` base class.
 
 ```javascript
-{
-    // Adds labels to objects in the ticks array. The default implementation simply calls this.options.ticks.callback(numericalTick, index, ticks);
-    generateTickLabels: function() {},
+    // Transform the ticks array of the scale instance into strings. The default implementation simply calls this.options.ticks.callback(numericalTick, index, ticks);
+    convertTicksToLabels: function() {},
 
     // Determine how much the labels will rotate by. The default implementation will only rotate labels if the scale is horizontal.
-    calculateLabelRotation: function() {},
+    calculateTickRotation: function() {},
 
     // Fits the scale into the canvas.
     // this.maxWidth and this.maxHeight will tell you the maximum dimensions the scale instance can be. Scales should endeavour to be as efficient as possible with canvas space.
@@ -118,18 +112,20 @@ Optionally, the following methods may also be overwritten, but an implementation
 
     // Draws the scale onto the canvas. this.(left|right|top|bottom) will have been populated to tell you the area on the canvas to draw in
     // @param chartArea : an object containing four properties: left, right, top, bottom. This is the rectangle that lines, bars, etc will be drawn in. It may be used, for example, to draw grid lines.
-    draw: function(chartArea) {}
-}
+    draw: function(chartArea) {},
 ```
 
 The Core.Scale base class also has some utility functions that you may find useful.
-
 ```javascript
 {
     // Returns true if the scale instance is horizontal
     isHorizontal: function() {},
 
-    // Returns the scale tick objects ({label, major})
-    getTicks: function() {}
+    // Get the correct value from the value from this.chart.data.datasets[x].data[]
+    // If dataValue is an object, returns .x or .y depending on the return of isHorizontal()
+    // If the value is undefined, returns NaN
+    // Otherwise returns the value.
+    // Note that in all cases, the returned value is not guaranteed to be a Number
+    getRightValue: function(dataValue) {},
 }
 ```

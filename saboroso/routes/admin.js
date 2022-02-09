@@ -7,6 +7,7 @@ var reservations = require('./../inc/reservations');
 var moment = require('moment');
 var contacts = require('./../inc/contacts');
 var emails = require('./../inc/emails');
+const Pagination = require('../inc/Pagination');
 
 moment.locale('pt-br');
 
@@ -163,12 +164,19 @@ router.delete('/menus/:id', function(req, res, next) {
 
 router.get('/reservations', function(req, res, next){
 
-    reservations.getReservations().then(data => {
+    let start = (req.query.start) ? req.query.start : moment().subtract(1, 'year').format('YYYY-MM-DD');
+    let end = (req.query.end) ? req.query.end : moment().format('YYYY-MM-DD');
+
+    reservations.getReservations(req).then(pag => {
 
         res.render('admin/reservations', admin.getParams(req, {
-            date: {},
-            data,
-            moment
+            date: {
+                start,
+                end
+            },
+            data: pag.data,
+            moment,
+            links: pag.links
         }));
 
     });
@@ -197,6 +205,17 @@ router.delete('/reservations/:id', function(req, res, next) {
 
     }).catch(err => res.send(err))
 
+});
+
+router.get('/reservations/chart', function(req, res, next) {
+
+    req.query.start = (req.query.start) ? req.query.start : moment().subtract(1, 'year').format('YYYY-MM-DD');
+    req.query.end = (req.query.end) ? req.query.end : moment().format('YYYY-MM-DD');
+
+    reservations.chart(req).then(chartData => {
+
+        res.send(chartData);
+    })
 });
 
 // Usuarios
