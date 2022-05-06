@@ -12,7 +12,7 @@ A aplicação consiste em um Web Site para serviços de restaurante
 - Mysql
 
 ## Front end
-- HTML / CSS / EJS / JS
+- BOOTSTRAP / JQUERY / EJS / JS
 
 # Como executar o projeto
 
